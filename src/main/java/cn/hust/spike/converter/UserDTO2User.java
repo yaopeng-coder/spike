@@ -1,7 +1,7 @@
 package cn.hust.spike.converter;
 
 import cn.hust.spike.entity.User;
-import cn.hust.spike.form.UserForm;
+import cn.hust.spike.dto.UserDTO;
 import org.springframework.beans.BeanUtils;
 
 /**
@@ -9,11 +9,11 @@ import org.springframework.beans.BeanUtils;
  * @author: yaopeng
  * @create: 2020-02-21 15:48
  **/
-public class UserForm2User {
+public class UserDTO2User {
 
-    public static User conver(UserForm userForm){
+    public static User conver(UserDTO userDTO){
         User user = new User();
-        BeanUtils.copyProperties(userForm,user);
+        BeanUtils.copyProperties(userDTO,user);
         return user;
     }
 }

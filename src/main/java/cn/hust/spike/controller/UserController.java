@@ -2,7 +2,8 @@ package cn.hust.spike.controller;
 
 import cn.hust.spike.Common.Const;
 import cn.hust.spike.Common.ServerResponse;
-import cn.hust.spike.form.UserForm;
+import cn.hust.spike.entity.User;
+import cn.hust.spike.dto.UserDTO;
 import cn.hust.spike.service.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -38,7 +39,7 @@ public class UserController {
      * @return
      */
     @PostMapping(value = "/register",consumes = {Const.CONTENT_TYPE_FORMED} )
-    public ServerResponse register(@Valid UserForm userForm,
+    public ServerResponse register(@Valid UserDTO userForm,
                                    BindingResult bindingResult,HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             log.error("【注册参数】参数不正确, userForm={}", userForm);
@@ -78,6 +79,33 @@ public class UserController {
         log.info("optCode = {}&&telphone = {}",otpCode,telphone);
 
         return ServerResponse.createBySuccess();
+
+    }
+
+    /**
+     * 用户登陆
+     * @param telphone
+     * @param password
+     * @return
+     */
+    @PostMapping(value = "/login",consumes = {Const.CONTENT_TYPE_FORMED} )
+    public ServerResponse login(@RequestParam(name = "telphone") String telphone, @RequestParam(name = "password") String password,HttpServletRequest request){
+        //1.校验参数是否为空
+        if(StringUtils.isBlank(telphone) || StringUtils.isBlank(password)){
+            return ServerResponse.createByErrorMessage("参数为空");
+        }
+
+
+
+        //2.将用户信息存储进session
+        ServerResponse<User> serverResponse =  userService.login(telphone,password);
+        if(serverResponse.isSuccess()){
+            request.getSession().setAttribute(Const.CURRENT_USER,serverResponse.getData());
+            return ServerResponse.createBySuccess();
+        }
+
+        return ServerResponse.createByError();
+
 
     }
 

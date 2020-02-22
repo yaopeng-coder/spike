@@ -8,4 +8,6 @@ package cn.hust.spike.Common;
 public class Const {
 
     public static final String CONTENT_TYPE_FORMED = "application/x-www-form-urlencoded";
+
+    public static final String CURRENT_USER = "CURRENT_USER";
 }

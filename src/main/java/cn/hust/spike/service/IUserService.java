@@ -1,7 +1,7 @@
 package cn.hust.spike.service;
 
 import cn.hust.spike.Common.ServerResponse;
-import cn.hust.spike.form.UserForm;
+import cn.hust.spike.dto.UserDTO;
 
 /**
  * @program: spike
@@ -10,5 +10,6 @@ import cn.hust.spike.form.UserForm;
  **/
 public interface IUserService {
 
-    ServerResponse register(UserForm userForm);
+    ServerResponse register(UserDTO userForm);
+    ServerResponse login(String telphone, String password);
 }
