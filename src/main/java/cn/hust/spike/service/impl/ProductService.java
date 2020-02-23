@@ -6,6 +6,7 @@ import cn.hust.spike.converter.ProductDTO2Product;
 import cn.hust.spike.dao.ProductMapper;
 import cn.hust.spike.dao.ProductStockMapper;
 import cn.hust.spike.dto.ProductDTO;
+import cn.hust.spike.dto.PromoDTO;
 import cn.hust.spike.entity.Product;
 import cn.hust.spike.entity.ProductStock;
 import cn.hust.spike.service.IProductSevice;
@@ -29,6 +30,9 @@ public class ProductService implements IProductSevice{
 
     @Autowired
     private ProductStockMapper productStockMapper;
+
+    @Autowired
+    private PromoService promoService;
 
 
     /**
@@ -64,9 +68,14 @@ public class ProductService implements IProductSevice{
 
         Product product = productMapper.selectByPrimaryKey(id);
 
+        //查看对应商品是否是秒杀商品
+        PromoDTO promoDTO = promoService.getPromoByProductId(id);
+
+
         ProductStock productStock = productStockMapper.selectByProductId(product.getId());
 
-        ProductDTO productDTO = Product2ProductDTO.conver(product,productStock);
+        ProductDTO productDTO = Product2ProductDTO.conver(product,productStock,promoDTO);
+        productDTO.setId(id);
 
         return ServerResponse.createBySuccess(productDTO);
 
@@ -83,7 +92,7 @@ public class ProductService implements IProductSevice{
 
         List<ProductDTO> productDTOList = products.stream().map(product -> {
             ProductStock productStock = productStockMapper.selectByProductId(product.getId());
-            ProductDTO productDTO = Product2ProductDTO.conver(product, productStock);
+            ProductDTO productDTO = Product2ProductDTO.conver(product, productStock,null);
             return productDTO;
         }).collect(Collectors.toList());
 

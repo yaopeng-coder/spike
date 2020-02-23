@@ -1,6 +1,7 @@
 package cn.hust.spike.converter;
 
 import cn.hust.spike.dto.ProductDTO;
+import cn.hust.spike.dto.PromoDTO;
 import cn.hust.spike.entity.Product;
 import cn.hust.spike.entity.ProductStock;
 import org.springframework.beans.BeanUtils;
@@ -13,10 +14,16 @@ import org.springframework.beans.BeanUtils;
 public class Product2ProductDTO {
 
 
-    public static ProductDTO conver(Product product, ProductStock productStock){
+    public static ProductDTO conver(Product product, ProductStock productStock, PromoDTO promoDTO){
         ProductDTO productDTO = new ProductDTO();
         BeanUtils.copyProperties(product,productDTO);
         productDTO.setStock(productStock.getStock());
+        if(promoDTO != null){
+            productDTO.setStartDate(promoDTO.getStartDate().toString());
+            productDTO.setPromoId(promoDTO.getId());
+            productDTO.setPromoStatus(promoDTO.getStatus());
+            productDTO.setPromoPrice(promoDTO.getPromoProductPrice());
+        }
         return productDTO;
 
     }

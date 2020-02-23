@@ -9,5 +9,5 @@ import cn.hust.spike.Common.ServerResponse;
  **/
 public interface IOrderService {
 
-    ServerResponse createOrder(Integer userId, Integer productId, Integer amount);
+    ServerResponse createOrder(Integer userId, Integer productId, Integer amount,Integer promoId);
 }

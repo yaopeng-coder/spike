@@ -2,10 +2,8 @@ package cn.hust.spike.service.impl;
 
 import cn.hust.spike.Common.ServerResponse;
 import cn.hust.spike.dao.*;
-import cn.hust.spike.entity.OrderInfo;
-import cn.hust.spike.entity.Product;
-import cn.hust.spike.entity.Sequence;
-import cn.hust.spike.entity.User;
+import cn.hust.spike.dto.PromoDTO;
+import cn.hust.spike.entity.*;
 import cn.hust.spike.service.IOrderService;
 import cn.hust.spike.util.BigDecimalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +33,9 @@ public class OrderService implements IOrderService {
     @Autowired
     private OrderInfoMapper orderInfoMapper;
 
+    @Autowired
+    private PromoService promoService;
+
 
     @Autowired
     private ProductStockMapper productStockMapper;
@@ -50,7 +51,7 @@ public class OrderService implements IOrderService {
      * @return
      */
     @Transactional
-    public ServerResponse createOrder(Integer userId,Integer productId,Integer amount){
+    public ServerResponse createOrder(Integer userId,Integer productId,Integer amount,Integer promoId){
 
         //1.检查下单信息是否正确
         User user = userMapper.selectByPrimaryKey(userId);
@@ -67,6 +68,17 @@ public class OrderService implements IOrderService {
             return ServerResponse.createByErrorMessage("下单数量不正确");
         }
 
+        PromoDTO promoDTO = null;
+        if(promoId != null){
+           promoDTO = promoService.getPromoByProductId(productId);
+            if(promoDTO.getProductId() != productId){
+                return ServerResponse.createByErrorMessage("活动信息不正确");
+            }else if(promoDTO.getStatus()!= 2){
+                return ServerResponse.createByErrorMessage("活动尚未开始");
+            }
+        }
+
+
         //2.落单减库存
 
         int affectRow = productStockMapper.decreaseStock(productId, amount);
@@ -82,10 +94,18 @@ public class OrderService implements IOrderService {
 
         order.setUserId(userId);
         order.setProductId(productId);
-        order.setProductPrice(product.getPrice().doubleValue());
+
+        if(promoId == null){
+            order.setProductPrice(product.getPrice().doubleValue());
+            order.setOrderPrice(BigDecimalUtil.mul(amount.doubleValue(),product.getPrice().doubleValue()).doubleValue());
+        }else {
+            order.setProductPrice(promoDTO.getPromoProductPrice().doubleValue());
+            order.setOrderPrice(BigDecimalUtil.mul(amount.doubleValue(),promoDTO.getPromoProductPrice().doubleValue()).doubleValue());
+        }
+
         order.setAmount(amount);
         order.setPromoId(0);
-        order.setOrderPrice(BigDecimalUtil.mul(amount.doubleValue(),product.getPrice().doubleValue()).doubleValue());
+
 
         orderInfoMapper.insert(order);
 
