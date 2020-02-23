@@ -1,6 +1,7 @@
 package cn.hust.spike.dao;
 
 import cn.hust.spike.entity.ProductStock;
+import org.apache.ibatis.annotations.Param;
 
 public interface ProductStockMapper {
     /**
@@ -53,6 +54,8 @@ public interface ProductStockMapper {
 
 
     ProductStock selectByProductId(Integer productId);
+
+    int decreaseStock(@Param( "productId") Integer productId,@Param("amount") Integer amount);
 
 
 }

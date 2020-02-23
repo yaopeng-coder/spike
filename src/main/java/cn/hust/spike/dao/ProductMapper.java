@@ -1,6 +1,7 @@
 package cn.hust.spike.dao;
 
 import cn.hust.spike.entity.Product;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -55,4 +56,7 @@ public interface ProductMapper {
 
 
     List<Product> selectProductList();
+
+
+    void increaseSales(@Param( "productId") Integer productId, @Param("amount") Integer amount);
 }
