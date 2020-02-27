@@ -67,6 +67,9 @@ public class ProductService implements IProductSevice{
     public ServerResponse<ProductDTO> productDetail(Integer id){
 
         Product product = productMapper.selectByPrimaryKey(id);
+        if(product == null){
+            return ServerResponse.createByErrorMessage("该商品不存在");
+        }
 
         //查看对应商品是否是秒杀商品
         PromoDTO promoDTO = promoService.getPromoByProductId(id);

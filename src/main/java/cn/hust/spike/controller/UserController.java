@@ -2,18 +2,21 @@ package cn.hust.spike.controller;
 
 import cn.hust.spike.Common.Const;
 import cn.hust.spike.Common.ServerResponse;
-import cn.hust.spike.entity.User;
 import cn.hust.spike.dto.UserDTO;
+import cn.hust.spike.entity.User;
 import cn.hust.spike.service.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: spike
@@ -29,6 +32,9 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
 
@@ -99,10 +105,20 @@ public class UserController {
 
         //2.将用户信息存储进session
         ServerResponse<User> serverResponse =  userService.login(telphone,password);
+
         if(serverResponse.isSuccess()){
-            request.getSession().setAttribute(Const.CURRENT_USER,serverResponse.getData());
-            return ServerResponse.createBySuccess();
+           // request.getSession().setAttribute(Const.CURRENT_USER,serverResponse.getData());
+            //生成登录凭证token，UUID
+            String uuidToken = UUID.randomUUID().toString();
+            uuidToken = uuidToken.replace("-","");
+            //建议token和用户登陆态之间的联系
+            redisTemplate.opsForValue().set(uuidToken,serverResponse.getData());
+            redisTemplate.expire(uuidToken,1, TimeUnit.HOURS);
+            return ServerResponse.createBySuccess(uuidToken);
         }
+
+
+
 
         return ServerResponse.createByError();
 

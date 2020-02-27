@@ -2,14 +2,17 @@ package cn.hust.spike.controller;
 
 import cn.hust.spike.Common.Const;
 import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.Common.TokenCache;
 import cn.hust.spike.dto.ProductDTO;
 import cn.hust.spike.service.impl.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: spike
@@ -26,6 +29,8 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
     @PostMapping(value = "/createProduct",consumes = {Const.CONTENT_TYPE_FORMED} )
@@ -40,10 +45,49 @@ public class ProductController {
 
     }
 
+    /**
+     * //商品详情页浏览
+     * @param id
+     * @return
+     */
     @RequestMapping(value = "/detail")
     public ServerResponse<ProductDTO> productDetail(@RequestParam(name = "id") Integer id){
+        ProductDTO productDTO;
+        Object nullValue = new Object();
 
-        return productService.productDetail(id);
+        //1 .先取本地缓存
+        productDTO = (ProductDTO) TokenCache.getKey("product_" + id);
+        if(productDTO == null){
+            try {
+                // 2 .根据商品的id到redis内获取
+                productDTO = (ProductDTO)redisTemplate.opsForValue().get("product_" + id);
+            } catch (Exception e) {
+               return ServerResponse.createByErrorMessage("该商品不存在");
+            }
+
+            // 3.若redis内不存在对应的itemModel,则访问下游service
+            if(productDTO == null){
+                ServerResponse<ProductDTO> serverResponse = productService.productDetail(id);
+                productDTO = serverResponse.getData();
+                if(productDTO == null){
+                    //防止缓存穿透，设置回种空值，并且设置60s的过期时间
+                    redisTemplate.opsForValue().set("product_" + id,nullValue);
+                    redisTemplate.expire("product_" + id,60, TimeUnit.SECONDS);
+                }else {
+                    redisTemplate.opsForValue().set("product_" + id,productDTO);
+                    redisTemplate.expire("product_" + id,3600, TimeUnit.SECONDS);
+                }
+            }
+            if(productDTO != null){
+                TokenCache.setKey("product_" + id,productDTO);
+            }
+
+        }
+
+
+
+        return ServerResponse.createBySuccess(productDTO);
+
     }
 
 
