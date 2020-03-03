@@ -9,4 +9,6 @@ import cn.hust.spike.dto.PromoDTO;
  **/
 public interface IPromoService {
     PromoDTO getPromoByProductId(Integer productId);
+    PromoDTO selectPromoCacheByProductId(Integer productId);
+    void publishPromo(Integer promoId);
 }

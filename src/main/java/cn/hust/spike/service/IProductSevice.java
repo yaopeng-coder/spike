@@ -2,6 +2,7 @@ package cn.hust.spike.service;
 
 import cn.hust.spike.Common.ServerResponse;
 import cn.hust.spike.dto.ProductDTO;
+import cn.hust.spike.entity.Product;
 
 /**
  * @program: spike
@@ -13,4 +14,5 @@ public interface IProductSevice {
 
     ServerResponse createProduct(ProductDTO productDTO);
     ServerResponse<ProductDTO> productDetail(Integer id);
+    Product selectProductCacheById(Integer productId);
 }

@@ -11,6 +11,7 @@ import cn.hust.spike.entity.Product;
 import cn.hust.spike.entity.ProductStock;
 import cn.hust.spike.service.IProductSevice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,9 @@ public class ProductService implements IProductSevice{
 
     @Autowired
     private PromoService promoService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
     /**
@@ -100,6 +104,23 @@ public class ProductService implements IProductSevice{
         }).collect(Collectors.toList());
 
         return ServerResponse.createBySuccess(productDTOList);
+
+    }
+
+
+    /**
+     * 从redis中查询商品
+     * @param productId
+     * @return
+     */
+    public Product selectProductCacheById(Integer productId){
+        Product product = (Product)redisTemplate.opsForValue().get("ProductCache"+ productId);
+        if(product == null){
+            product = productMapper.selectByPrimaryKey(productId);
+            redisTemplate.opsForValue().set("ProductCache"+ productId,product);
+        }
+
+        return product;
 
     }
 }

@@ -1,7 +1,6 @@
 package cn.hust.spike.dto;
 
 import lombok.Data;
-import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 
@@ -22,10 +21,10 @@ public class PromoDTO {
     private String promoName;
 
     //秒杀活动的开始时间
-    private DateTime startDate;
+    private String startDate;
 
-    //秒杀活动的结束时间
-    private DateTime endDate;
+    //秒杀活动的结束时间  设置为String类型便于序列化
+    private String endDate;
 
     //秒杀活动的适用商品
     private Integer productId;

@@ -1,8 +1,12 @@
 package cn.hust.spike.config;
 
 
+import cn.hust.spike.serializer.JodaDateTimeJsonDeserializer;
+import cn.hust.spike.serializer.JodaDateTimeJsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.joda.time.DateTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,12 +40,18 @@ public class RedisConfig {
 
         ObjectMapper objectMapper =  new ObjectMapper();
 
+        SimpleModule simpleModule = new SimpleModule();
+        simpleModule.addSerializer(DateTime.class,new JodaDateTimeJsonSerializer());
+        simpleModule.addDeserializer(DateTime.class,new JodaDateTimeJsonDeserializer());
+
         //ObjectMapper.DefaultTyping.NON_FINAL配置，在序列化时记录对象类型，以便反序列化时得到对应的具体对象。
         //不配置反序列化时会得到反序列化时失败的异常，因为刚开始设置的为object.class,所以通过这种方式就是通用序列化
         objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
 
         //忽略空Bean转json的错误
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
+
+        objectMapper.registerModule(simpleModule);
 
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
         template.setValueSerializer(jackson2JsonRedisSerializer);

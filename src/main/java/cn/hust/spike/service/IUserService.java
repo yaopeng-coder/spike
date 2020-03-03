@@ -2,6 +2,7 @@ package cn.hust.spike.service;
 
 import cn.hust.spike.Common.ServerResponse;
 import cn.hust.spike.dto.UserDTO;
+import cn.hust.spike.entity.User;
 
 /**
  * @program: spike
@@ -12,4 +13,5 @@ public interface IUserService {
 
     ServerResponse register(UserDTO userForm);
     ServerResponse login(String telphone, String password);
+    User selectUserCacheById(Integer userId);
 }

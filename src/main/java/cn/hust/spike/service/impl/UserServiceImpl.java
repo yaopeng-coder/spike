@@ -3,13 +3,14 @@ package cn.hust.spike.service.impl;
 import cn.hust.spike.Common.ServerResponse;
 import cn.hust.spike.converter.UserDTO2User;
 import cn.hust.spike.dao.UserMapper;
-import cn.hust.spike.entity.User;
 import cn.hust.spike.dto.UserDTO;
+import cn.hust.spike.entity.User;
 import cn.hust.spike.service.IUserService;
 import cn.hust.spike.util.MD5Util;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,9 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 注册用户
@@ -75,6 +79,22 @@ public class UserServiceImpl implements IUserService {
 
         return ServerResponse.createBySuccess("登陆成功",user);
 
+
+    }
+
+    /**
+     * 得到redis缓存中的user对象
+     * @param userId
+     * @return
+     */
+    public User selectUserCacheById(Integer userId){
+        User user = (User)redisTemplate.opsForValue().get("UserCache"+ userId);
+        if(user == null){
+            user = userMapper.selectByPrimaryKey(userId);
+            redisTemplate.opsForValue().set("UserCache"+ userId,user);
+        }
+
+        return user;
 
     }
 }
