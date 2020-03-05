@@ -1,6 +1,6 @@
 package cn.hust.spike.controller;
 
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.service.IPromoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

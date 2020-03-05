@@ -1,4 +1,4 @@
-package cn.hust.spike.Common;
+package cn.hust.spike.common;
 
 /**
  * @program: spike
@@ -11,7 +11,10 @@ public enum ResponseCode {
     ERROR(1,"ERROR"),
     NEED_LOGIN(10,"NEED_LOGIN"),
     NO_STOCK(11,"NO_STOCK"),
+    MESSAGE_SEND_FAIL(22,"MQ_SEND_FAIL"),
     ILLEGAL_ARGUMENT(2,"ILLEGAL_ARGUMENT");
+
+
 
 
     private final int code;

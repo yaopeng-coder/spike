@@ -1,4 +1,4 @@
-package cn.hust.spike.Common;
+package cn.hust.spike.common;
 
 /**
  * @program: spike

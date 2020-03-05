@@ -1,6 +1,6 @@
 package cn.hust.spike.service.impl;
 
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.converter.UserDTO2User;
 import cn.hust.spike.dao.UserMapper;
 import cn.hust.spike.dto.UserDTO;

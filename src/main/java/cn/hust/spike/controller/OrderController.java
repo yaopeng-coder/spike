@@ -1,9 +1,10 @@
 package cn.hust.spike.controller;
 
-import cn.hust.spike.Common.Const;
-import cn.hust.spike.Common.ResponseCode;
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.Const;
+import cn.hust.spike.common.ResponseCode;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.entity.User;
+import cn.hust.spike.mq.MQProducer;
 import cn.hust.spike.service.impl.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +34,9 @@ public class OrderController {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private MQProducer mqProducer;
 
     /**
      *
@@ -68,7 +72,13 @@ public class OrderController {
 
         //2.创建订单
 
-        return orderService.createOrder(user.getId(),productId,amount,promoId);
+        //return orderService.createOrder(user.getId(),productId,amount,promoId);
+        boolean result = mqProducer.transactionAsyncReduceStock(user.getId(), productId, amount, promoId);
+        if(result){
+            return ServerResponse.createBySuccess("下单成功");
+        }else {
+            return ServerResponse.createByErrorMessage("库存不足");
+        }
 
 
     }

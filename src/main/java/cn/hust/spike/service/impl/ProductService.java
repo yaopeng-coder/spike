@@ -1,6 +1,6 @@
 package cn.hust.spike.service.impl;
 
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.converter.Product2ProductDTO;
 import cn.hust.spike.converter.ProductDTO2Product;
 import cn.hust.spike.dao.ProductMapper;
@@ -9,6 +9,7 @@ import cn.hust.spike.dto.ProductDTO;
 import cn.hust.spike.dto.PromoDTO;
 import cn.hust.spike.entity.Product;
 import cn.hust.spike.entity.ProductStock;
+import cn.hust.spike.mq.MQProducer;
 import cn.hust.spike.service.IProductSevice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,6 +38,9 @@ public class ProductService implements IProductSevice{
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private MQProducer mqProducer;
 
 
     /**
@@ -121,6 +125,67 @@ public class ProductService implements IProductSevice{
         }
 
         return product;
+
+    }
+
+
+    /**
+     * 扣减库存
+     * @param productId
+     * @param amount
+     * @return
+     */
+    @Transactional
+    public boolean decreaseStock(Integer productId , Integer amount ){
+        //第一版  直接更新数据库中的内存 但会导致数据库行锁，效率慢
+//        int affectRow = productStockMapper.decreaseStock(productId, amount);
+//        if(affectRow > 0){
+//            return true;
+//        }else {
+//            return false;
+//        }
+
+        long result = redisTemplate.opsForValue().increment("promo_product_stock"+ productId,amount.intValue() * -1);
+
+        //result代表剩下的库存  大于0表示库存足够
+        if(result >= 0){
+
+            //异步发送扣减库存消息给数据库消费者 flag表示消息是否发送成功 ,
+            //这样做是有问题的，假设事务在之后的处理中例如订单入库事务回滚了，但是这条消息已经投递出去了，会导致少卖
+            //解决的第一个想法是在该事务最后一步投递消息，但还是有问题，因为事务提交是在函数全部执行完，所以即使你投递消息在最后
+            //也可能会导致消息投递出去但是事务提交失败导致回滚
+            //那么可以在spring提供的事务方法中在事务提交后再投递消息，但是投递消息可能会失败，说白了就是分布式事务的问题
+//            boolean mqResult = mqProducer.asyncStockReduceMessage(productId, amount);
+//            if(mqResult){
+//                return true;
+//            }else {
+//                //发送消息失败需要把redis扣减的库存给加回来
+//                redisTemplate.opsForValue().increment("promo_product_stock"+ productId,amount.intValue());
+//                return false;
+//            }
+
+
+            return true;
+        }else{
+            //redis扣减库存不足需要把redis扣减的库存给加回来
+            increaseStock(productId,amount);
+            return false;
+        }
+
+
+    }
+
+    @Transactional
+    public void  increaseStock(Integer productId , Integer amount ){
+
+        redisTemplate.opsForValue().increment("promo_product_stock"+ productId,amount.intValue());
+
+    }
+
+
+      public boolean asyncStockReduceMessage(Integer productId,Integer amount){
+
+           return  mqProducer.asyncStockReduceMessage(productId, amount);
 
     }
 }

@@ -1,6 +1,6 @@
 package cn.hust.spike.service;
 
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.dto.UserDTO;
 import cn.hust.spike.entity.User;
 

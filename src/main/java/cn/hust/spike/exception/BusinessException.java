@@ -1,6 +1,6 @@
 package cn.hust.spike.exception;
 
-import cn.hust.spike.Common.ResponseCode;
+import cn.hust.spike.common.ResponseCode;
 import lombok.Data;
 
 /**
@@ -9,18 +9,20 @@ import lombok.Data;
  * @create: 2020-03-03 13:53
  **/
 @Data
-public class BusinessException extends RuntimeException {
+public class BusinessException  extends Exception{
 
     private Integer code;
 
-    public BusinessException(ResponseCode responseCode) {
-        super(responseCode.getDesc());
+    private String message;
 
+    public BusinessException(ResponseCode responseCode) {
+
+        message = responseCode.getDesc();
         this.code = responseCode.getCode();
     }
 
     public BusinessException(Integer code, String message) {
-        super(message);
+        message = message;
         this.code = code;
     }
 }

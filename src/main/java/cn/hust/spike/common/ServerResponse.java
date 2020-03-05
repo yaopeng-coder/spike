@@ -1,4 +1,4 @@
-package cn.hust.spike.Common;
+package cn.hust.spike.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

@@ -1,7 +1,7 @@
 package cn.hust.spike.controller;
 
-import cn.hust.spike.Common.Const;
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.Const;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.dto.UserDTO;
 import cn.hust.spike.entity.User;
 import cn.hust.spike.service.IUserService;

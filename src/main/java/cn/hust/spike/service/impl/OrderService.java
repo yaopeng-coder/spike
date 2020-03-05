@@ -1,7 +1,7 @@
 package cn.hust.spike.service.impl;
 
-import cn.hust.spike.Common.ResponseCode;
-import cn.hust.spike.Common.ServerResponse;
+import cn.hust.spike.common.ResponseCode;
+import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.dao.*;
 import cn.hust.spike.dto.PromoDTO;
 import cn.hust.spike.entity.OrderInfo;
@@ -67,7 +67,7 @@ public class OrderService implements IOrderService {
      * @return
      */
     @Transactional
-    public ServerResponse createOrder(Integer userId,Integer productId,Integer amount,Integer promoId){
+    public ServerResponse createOrder(Integer userId,Integer productId,Integer amount,Integer promoId)throws BusinessException{
 
         //交易链路共有五次数据库操作 ，并且更新库存有行锁
 
@@ -80,7 +80,10 @@ public class OrderService implements IOrderService {
         User user = userService.selectUserCacheById(userId);
         if(user == null){
             return ServerResponse.createByErrorMessage("该用户不存在");
+
         }
+
+
 
         //检查活动信息是否异常  引入redis ,若要紧急下线，直接清除redis对应的Key即可
       //  Product product = productMapper.selectByPrimaryKey(productId);
@@ -109,22 +112,14 @@ public class OrderService implements IOrderService {
         }
 
 
-        //2.落单减库存，注意 productId必须是有索引的，否则会导致锁表
-//        int affectRow = productStockMapper.decreaseStock(productId, amount);
-//        if(affectRow <=0){
-//            //return ServerResponse.createByErrorMessage("库存不足");
-//            //抛异常回滚，回滚数据库里的数据
-//            throw new BusinessException(ResponseCode.NO_STOCK.getCode(),"库存不足");
-//        }
-
+        //2.落单减库存，注意 productId必须是有索引的，否则会导致锁
 
 
         //更改减库存逻辑 将库存缓存化
-        long result = redisTemplate.opsForValue().increment("promo_product_stock"+ productId,amount.intValue() * -1);
+        boolean flag = productSevice.decreaseStock(productId, amount);
 
-        //result代表剩下的库存  注意这里库存不足会回滚 但是回滚不了redis中数据，宁可少买的原则，即redis里数据可以比实际的少
-        if(result < 0){
-            throw new BusinessException(ResponseCode.NO_STOCK.getCode(),"库存不足");
+        if(!flag){
+            throw new BusinessException(ResponseCode.NO_STOCK);
         }
 
 
@@ -149,12 +144,42 @@ public class OrderService implements IOrderService {
         order.setPromoId(0);
 
 
-        orderInfoMapper.insert(order);
+        int insert = orderInfoMapper.insert(order);
+        if(insert < 0){
+            productSevice.increaseStock(productId,amount);
+            throw new BusinessException(ResponseCode.ERROR);
+        }
 
         //增加产品销量
         productMapper.increaseSales(productId,amount);
 
         //4.返回前端
+
+        //第一种：假设在这里投递消息，也有可能事务在最后提交时失败回滚，但是消息已经投递出去了,所以也是不可行的
+//        boolean mqResult = productSevice.asyncStockReduceMessage(productId, amount);
+//        if(!mqResult){
+//            //加回库存
+//            productSevice.increaseStock(productId,amount);
+//            throw new BusinessException(ResponseCode.MESSAGE_SEND_FAIL.getCode(),ResponseCode.MESSAGE_SEND_FAIL.getDesc());
+//        }
+
+        //第二种：这种通过事务管理器在事务提交后发送消息，若消息发送失败，仅仅是扣回redis库存是不足够的，
+        // 因为刚刚的事务中还创建了订单加销量等等，所以你消息发送失败必须回滚刚刚的事务才行
+        //通过这些方法，你发现还是要解决分布式事务的问题
+//        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+//
+//            @Override
+//            public void afterCommit() {
+//                boolean mqResult = productSevice.asyncStockReduceMessage(productId, amount);
+//                if(!mqResult){
+//                         //加回库存
+//            productSevice.increaseStock(productId,amount);
+//            throw new BusinessException(ResponseCode.MESSAGE_SEND_FAIL.getCode(),ResponseCode.MESSAGE_SEND_FAIL.getDesc());
+//        }
+//            }
+//
+//
+//        });
 
         return ServerResponse.createBySuccess();
 

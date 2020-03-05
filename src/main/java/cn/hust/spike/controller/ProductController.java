@@ -1,8 +1,8 @@
 package cn.hust.spike.controller;
 
-import cn.hust.spike.Common.Const;
-import cn.hust.spike.Common.ServerResponse;
-import cn.hust.spike.Common.TokenCache;
+import cn.hust.spike.common.Const;
+import cn.hust.spike.common.ServerResponse;
+import cn.hust.spike.common.TokenCache;
 import cn.hust.spike.dto.ProductDTO;
 import cn.hust.spike.service.IPromoService;
 import cn.hust.spike.service.impl.ProductService;
