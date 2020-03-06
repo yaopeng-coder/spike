@@ -60,6 +60,8 @@ public class ProductController {
         Object nullValue = new Object();
 
         //1 .先取本地缓存
+        //本地缓存不要设置太长时间 ，一是因为内存问题 二是本地缓存不像redis一样好清理，需要每台应用服务器感知到数据的变更，一般可以用广播型的
+        //mq消息解决，推荐rocketmq的广播消息，使得订阅对于商品消息变更的所有应用服务器都有机会清理本地缓存
         productDTO = (ProductDTO) TokenCache.getKey("product_" + id);
         if(productDTO == null){
             try {

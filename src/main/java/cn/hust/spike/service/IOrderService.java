@@ -1,6 +1,5 @@
 package cn.hust.spike.service;
 
-import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.exception.BusinessException;
 
 /**
@@ -10,5 +9,6 @@ import cn.hust.spike.exception.BusinessException;
  **/
 public interface IOrderService {
 
-    ServerResponse createOrder(Integer userId, Integer productId, Integer amount,Integer promoId) throws BusinessException;
+    void createOrder(Integer userId, Integer productId, Integer amount,Integer promoId,String stockLogId) throws BusinessException ;
+    String generateId();
 }

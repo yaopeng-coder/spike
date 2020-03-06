@@ -1,14 +1,17 @@
 package cn.hust.spike.service.impl;
 
+import cn.hust.spike.common.Const;
 import cn.hust.spike.common.ServerResponse;
 import cn.hust.spike.converter.Product2ProductDTO;
 import cn.hust.spike.converter.ProductDTO2Product;
 import cn.hust.spike.dao.ProductMapper;
 import cn.hust.spike.dao.ProductStockMapper;
+import cn.hust.spike.dao.StockLogMapper;
 import cn.hust.spike.dto.ProductDTO;
 import cn.hust.spike.dto.PromoDTO;
 import cn.hust.spike.entity.Product;
 import cn.hust.spike.entity.ProductStock;
+import cn.hust.spike.entity.StockLog;
 import cn.hust.spike.mq.MQProducer;
 import cn.hust.spike.service.IProductSevice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +45,9 @@ public class ProductService implements IProductSevice{
 
     @Autowired
     private MQProducer mqProducer;
+
+    @Autowired
+    private StockLogMapper stockLogMapper;
 
 
     /**
@@ -148,7 +155,7 @@ public class ProductService implements IProductSevice{
         long result = redisTemplate.opsForValue().increment("promo_product_stock"+ productId,amount.intValue() * -1);
 
         //result代表剩下的库存  大于0表示库存足够
-        if(result >= 0){
+        if(result >0){
 
             //异步发送扣减库存消息给数据库消费者 flag表示消息是否发送成功 ,
             //这样做是有问题的，假设事务在之后的处理中例如订单入库事务回滚了，但是这条消息已经投递出去了，会导致少卖
@@ -166,6 +173,11 @@ public class ProductService implements IProductSevice{
 
 
             return true;
+        }else if(result == 0){
+            //打上库存售罄标识
+            redisTemplate.opsForValue().set("promo_stock_invalid_"+productId,"true");
+            return true;
+
         }else{
             //redis扣减库存不足需要把redis扣减的库存给加回来
             increaseStock(productId,amount);
@@ -174,6 +186,8 @@ public class ProductService implements IProductSevice{
 
 
     }
+
+
 
     @Transactional
     public void  increaseStock(Integer productId , Integer amount ){
@@ -188,4 +202,33 @@ public class ProductService implements IProductSevice{
            return  mqProducer.asyncStockReduceMessage(productId, amount);
 
     }
+
+
+    /**
+     * 初始化库存流水状态，便于本地事务反查
+     * @param productId
+     * @param amount
+     * @return
+     */
+      public String initStockStatus(Integer productId, Integer amount){
+
+          StockLog stockLog = new StockLog();
+          stockLog.setStockLogId(UUID.randomUUID().toString());
+          stockLog.setAmount(amount);
+          stockLog.setProductId(productId);
+          stockLog.setStatus(Const.Stock_Status.INIT_STOCK_STATUS.getCode());
+
+          stockLogMapper.insertSelective(stockLog);
+          return stockLog.getStockLogId();
+
+
+      }
+
+
+      @Transactional
+      public void increaseSales(Integer productId,Integer amount){
+
+          //存在行锁
+         productMapper.increaseSales(productId,amount);
+      }
 }

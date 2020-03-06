@@ -18,4 +18,6 @@ public interface IProductSevice {
     boolean decreaseStock(Integer productId , Integer amount );
     void  increaseStock(Integer productId , Integer amount );
     boolean asyncStockReduceMessage(Integer productId,Integer amount);
+
+    void increaseSales(Integer productId,Integer amount)  ;
 }

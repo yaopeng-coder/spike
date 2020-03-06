@@ -82,10 +82,16 @@
         <!--<table tableName="sequence" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">-->
             <!--<property name="useActualColumnNames" value="false" />-->
         <!--</table>-->
-        <table tableName="promo" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        <!--<table tableName="promo" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">-->
+            <!--<property name="useActualColumnNames" value="false" />-->
+            <!--&lt;!&ndash; 数据库表主键 &ndash;&gt;-->
+            <!--<generatedKey column="id" sqlStatement="Mysql" identity="true" />-->
+        <!--</table>-->
+
+        <table tableName="stock_log" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
             <property name="useActualColumnNames" value="false" />
             <!-- 数据库表主键 -->
-            <generatedKey column="id" sqlStatement="Mysql" identity="true" />
+            <generatedKey column="stock-log_id" sqlStatement="Mysql" identity="true" />
         </table>
 
     </context>
