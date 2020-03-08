@@ -28,4 +28,7 @@ public class PromoController {
         promoService.publishPromo(id);
         return ServerResponse.createBySuccess();
     }
+
+
+
 }

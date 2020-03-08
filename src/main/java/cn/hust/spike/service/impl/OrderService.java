@@ -202,19 +202,17 @@ public class OrderService implements IOrderService {
      */
     @Transactional
     public void createOrder(Integer userId,Integer productId,Integer amount,Integer promoId,String stockLogId)throws BusinessException{
-        //1.校验参数  检验 4个参数， 从redis中查询
+        //1.校验参数  检验 4个参数， 从redis中查询  将风控策略前置到秒杀令牌中
 
-        User user = userService.selectUserCacheById(userId);
-        if(user == null){
-            throw new BusinessException(ResponseCode.ERROR.getCode(),"该用户不存在");
-
-
-        }
+//        User user = userService.selectUserCacheById(userId);
+//        if(user == null){
+//            throw new BusinessException(ResponseCode.ERROR.getCode(),"该用户不存在");
+//        }
 
         Product product = productSevice.selectProductCacheById(productId);
-        if(product == null){
-            throw new BusinessException(ResponseCode.ERROR.getCode(),"该商品不存在");
-        }
+//        if(product == null){
+//            throw new BusinessException(ResponseCode.ERROR.getCode(),"该商品不存在");
+//        }
 
         if(amount <= 0 || amount >99){
             throw new BusinessException(ResponseCode.ERROR.getCode(),"下单数量不正确");
@@ -222,17 +220,17 @@ public class OrderService implements IOrderService {
 
 
         PromoDTO promoDTO = null;
-        if(promoId != null){
+ //       if(promoId != null){
             // promoDTO = promoService.getPromoByProductId(productId);
 
             //从redis中查询
-            promoDTO = promoService.selectPromoCacheByProductId(productId);
-            if(promoDTO.getProductId() != productId){
-                throw new BusinessException(ResponseCode.ERROR.getCode(),"活动信息不正确");
-            }else if(promoDTO.getStatus()!= 2){
-                throw new BusinessException(ResponseCode.ERROR.getCode(),"活动尚未开始");
-            }
-        }
+   //         promoDTO = promoService.selectPromoCacheByProductId(productId);
+//            if(promoDTO.getProductId() != productId){
+//                throw new BusinessException(ResponseCode.ERROR.getCode(),"活动信息不正确");
+//            }else if(promoDTO.getStatus()!= 2){
+//                throw new BusinessException(ResponseCode.ERROR.getCode(),"活动尚未开始");
+//            }
+  //      }
 
         //2.从redis中减去库存
         boolean decreaseStockFlag = productSevice.decreaseStock(productId, amount);
